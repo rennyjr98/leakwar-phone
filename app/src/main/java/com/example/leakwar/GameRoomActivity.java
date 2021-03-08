@@ -1,63 +1,101 @@
 package com.example.leakwar;
 
-import android.content.Context;
-import android.content.Intent;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
-import android.widget.LinearLayout;
+import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
+import android.view.animation.TranslateAnimation;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import com.example.leakwar.models.Token;
 import com.example.leakwar.models.User;
-import com.github.nkzawa.emitter.Emitter;
+import com.example.leakwar.templates.TBaseGameRoom;
+import com.example.leakwar.utils.LWClient;
 import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.LinkedList;
 
-public class GameRoomActivity extends AppCompatActivity {
-    private int time = 15;
-    private String roomId;
-
-    private User player;
-    private Socket mSocket;
-    private TextView status;
-    private TextView visual_timer;
-    private Context appContext = this;
-    private Gson gson = new Gson();
-
-    private LinkedList<User> friends = new LinkedList<User>();
+public class GameRoomActivity extends TBaseGameRoom {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         setContentView(R.layout.game_room);
         this.roomId = getIntent().getStringExtra("roomId");
+        String jsonToken = getIntent().getStringExtra("token");
 
         TextView room = findViewById(R.id.room);
         this.status = findViewById(R.id.status);
+        this.status.setTranslationZ(16);
+        this.job = findViewById(R.id.currentdata);
+        this.deckBtn = findViewById(R.id.deckBtn);
         this.visual_timer = findViewById(R.id.timer);
+        this.deckBox = findViewById(R.id.deckBox);
+        this.task = findViewById(R.id.task);
+        this.task.setVisibility(View.INVISIBLE);
+        this.optionA = findViewById(R.id.option_a);
+        this.optionB = findViewById(R.id.option_b);
 
         room.setText(roomId);
         this.status.setText("Conectando...");
-        this.visual_timer.setText(this.time + " seg");
+        this.visual_timer.setText("");
+        this.deckBox.setVisibility(View.INVISIBLE);
+
+        status.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (v.getId()) {
+                    case R.id.status:
+                        if(player.isAdmin()) {
+                            mSocket.emit("reqStartGame", roomId);
+                        }
+                        break;
+                }
+            }
+        });
+
+        this.deckBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (v.getId()) {
+                    case R.id.deckBtn:
+                        showDeck = !showDeck;
+                        deckBox.setVisibility((showDeck ? View.VISIBLE : View.INVISIBLE));
+                        TranslateAnimation anim = null;
+                        if(showDeck) {
+                            anim = new TranslateAnimation(
+                                    0,
+                                    0,
+                                    deckBox.getHeight(),
+                                    0);
+                        } else {
+                            anim = new TranslateAnimation(
+                                    0,
+                                    0,
+                                    0,
+                                    deckBox.getHeight());
+                        }
+                        anim.setDuration(200);
+                        deckBox.startAnimation(anim);
+                        break;
+                }
+            }
+        });
 
         try {
             GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
-            this.player = new User(acct.getDisplayName(), acct.getEmail());
+            Token token = gson.fromJson((String)jsonToken, Token.class);
+            this.player = new User(acct.getDisplayName(), acct.getEmail(), roomId, token);
             String json = this.gson.toJson(this.player);
             URI url = new URI(
                     "http",
-                    "192.168.0.3:8080",
+                    LWClient.Server_IP,
                     "",
                     "user=" + json + "&room=" + roomId,
                     "");
@@ -66,34 +104,25 @@ public class GameRoomActivity extends AppCompatActivity {
             setSocketListeners();
             this.mSocket.connect();
             this.status.setText("Esperando a más jugadores");
-        } catch (URISyntaxException e) {
+        } catch(URISyntaxException e) {
             this.status.setText(e.getMessage());
         }
     }
 
-    private void setSocketListeners() {
-        this.mSocket.on("add_friend", onNewFriend);
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+        .setTitle("¿Ya viste suficiente?")
+        .setMessage("¿Realmente quieres salir de la sala?")
+        .setPositiveButton("Si", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        })
+        .setNegativeButton("No", null)
+        .show();
     }
-
-    private Emitter.Listener onNewFriend = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            final Object tmpFriend = args[0];
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    friends.add(gson.fromJson((String)tmpFriend, User.class));
-                    LinearLayout linear = findViewById(R.id.list);
-                    for(User user : friends) {
-                        TextView name = new TextView(appContext);
-                        name.setText(user.getName());
-                        if(user.isAdmin())
-                            linear.addView(name);
-                    }
-                }
-            });
-        }
-    };
 
     @Override
     public void onDestroy() {

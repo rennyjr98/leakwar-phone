@@ -3,6 +3,7 @@ package com.example.leakwar;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,20 +15,37 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.example.leakwar.models.Token;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.gson.Gson;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 
 public class JoinRoomActivity  extends AppCompatActivity {
     protected GoogleSignInClient mGoogleSignInClient;
+    protected String jsonToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.joinroom_layout);
+        this.jsonToken = getIntent().getStringExtra("token");
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -79,6 +97,27 @@ public class JoinRoomActivity  extends AppCompatActivity {
         EditText password = findViewById(R.id.password_room_edit);
         id.setText("LosRajones");
         password.setText("elpepepe");
+
+        if(this.jsonToken != null) {
+            Token token = (new Gson()).fromJson((String) this.jsonToken, Token.class);
+            try (OutputStream file = new FileOutputStream(new File(getExternalFilesDir(null), "token.tk"));
+                 OutputStream buffer = new BufferedOutputStream(file);
+                 ObjectOutput output = new ObjectOutputStream(buffer)) {
+                output.writeObject(token);
+            } catch (IOException err) {
+                Log.e("ERROR", err.getMessage());
+            }
+        } else {
+            try (InputStream file = new FileInputStream(new File(getExternalFilesDir(null), "token.tk"));
+                 InputStream buffer = new BufferedInputStream(file);
+                 ObjectInput output = new ObjectInputStream(buffer)) {
+                Object objToken = output.readObject();
+                Token token = (Token) objToken;
+                this.jsonToken = (new Gson()).toJson(token);
+            } catch (IOException | ClassNotFoundException err) {
+                Log.e("ERROR", err.getMessage());
+            }
+        }
     }
 
     private void signOut() {
@@ -126,6 +165,7 @@ public class JoinRoomActivity  extends AppCompatActivity {
         EditText id = findViewById(R.id.room_id_edit);
         Intent intent = new Intent(JoinRoomActivity.this, GameRoomActivity.class);
         intent.putExtra("roomId", id.getText().toString());
+        intent.putExtra("token", this.jsonToken);
         startActivity(intent);
     }
 }
