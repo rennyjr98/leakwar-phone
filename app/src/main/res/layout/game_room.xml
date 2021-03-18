@@ -2,7 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#262626">
 
     <LinearLayout
         android:id="@+id/list"
@@ -69,7 +70,7 @@
             android:textColor="#FFFFFF"
             android:elevation="3dp"
             android:text="Desempleado"
-            android:background="@color/colorPrimaryDark"/>
+            android:background="#50B888"/>
 
         <ScrollView
             android:id="@+id/contentBox"
@@ -101,8 +102,10 @@
             android:layout_width="match_parent"
             android:layout_height="400dp"
             android:layout_marginBottom="10dp"
+            android:layout_marginHorizontal="10dp"
             android:fillViewport="true"
             android:background="@drawable/menubox"
+            android:elevation="3dp"
             app:layout_constraintBottom_toTopOf="@id/deckBtn"/>
 
         <LinearLayout
@@ -113,9 +116,10 @@
             android:fillViewport="true"
             android:padding="16dp"
             android:layout_marginBottom="10dp"
+            android:layout_marginHorizontal="10dp"
             android:background="@drawable/menubox"
             app:layout_constraintBottom_toTopOf="@id/deckBtn"
-            android:elevation="3dp">
+            android:elevation="5dp">
 
             <TextView
                 android:id="@+id/task_name"
@@ -124,12 +128,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:textColor="#000"
-                android:background="#FFF"/>
+                android:textColor="#fff"
+                android:background="#1F1F1F"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
                 android:orientation="horizontal" >
 
                 <Button
@@ -137,6 +143,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="70dp"
                     android:layout_weight="1"
+                    android:textColor="@color/colorPrimary"
+                    android:layout_marginHorizontal="3dp"
+                    android:background="@drawable/cutom_button"
                     android:textSize="11dp" />
 
                 <Button
@@ -144,6 +153,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="70dp"
                     android:layout_weight="1"
+                    android:textColor="@color/colorPrimary"
+                    android:background="@drawable/cutom_button"
+                    android:layout_marginHorizontal="3dp"
                     android:textSize="11dp"/>
             </LinearLayout>
             <LinearLayout
@@ -156,6 +168,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
+                    android:textColor="#fff"
                     android:layout_weight="1"/>
 
                 <TextView
@@ -163,6 +176,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
+                    android:textColor="#fff"
                     android:layout_weight="1"/>
             </LinearLayout>
         </LinearLayout>
@@ -171,8 +185,8 @@
             android:id="@+id/deckBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/deckbtnbox"
-            android:textColor="#FFFFFF"
+            android:background="@drawable/cutom_button"
+            android:textColor="@color/colorPrimary"
             app:layout_constraintBottom_toBottomOf="parent"
             android:text="Baraja"/>
 

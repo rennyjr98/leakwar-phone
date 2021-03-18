@@ -83,7 +83,8 @@ public class PhotoClient {
             dir = new File(_sdcard.getAbsolutePath() + parentPath);
         }
 
-        File file = new Compressor(context).setQuality(100).compressToFile(new File(dir.getAbsolutePath() + "/" + url));
+        File file = new Compressor(context).setQuality(40)
+                .compressToFile(new File(dir.getAbsolutePath() + "/" + url));
         return toBase64(file);
     }
 

@@ -1,6 +1,7 @@
 package com.example.leakwar.utils;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,11 @@ public class CustomArrayAdapter extends ArrayAdapter<String> {
         this.descs = descs;
     }
 
+    public void add(ArrayList<String> titles, ArrayList<String> descs) {
+        this.titles.addAll(titles);
+        this.descs.addAll(descs);
+    }
+
     @Override
     public View getView(final int position, View view, ViewGroup parent) {
         LayoutInflater inflater = context.getLayoutInflater();
@@ -30,6 +36,8 @@ public class CustomArrayAdapter extends ArrayAdapter<String> {
 
         final TextView title = (TextView) rowView.findViewById(R.id.title_card);
         TextView desc = (TextView) rowView.findViewById(R.id.desc);
+        title.setTextColor(Color.WHITE);
+        desc.setTextColor(Color.WHITE);
         title.setText(this.titles.get(position));
         desc.setText(this.descs.get(position));
 

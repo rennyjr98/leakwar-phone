@@ -85,6 +85,7 @@ public class TBaseGameRoom extends AppCompatActivity {
         this.mSocket.on("req_payment", onPenance);
         this.mSocket.on("show_payment", onShowPayment);
         this.mSocket.on("get_deck", onGetDeck);
+        this.mSocket.on("turn_card", onTurnCard);
         this.mSocket.on("clock", onClock);
         // this.mSocket.on("end",)
         // TODO : Show cloud imgs
@@ -154,6 +155,13 @@ public class TBaseGameRoom extends AppCompatActivity {
                 @SuppressLint("SetTextI18n")
                 @Override
                 public void run() {
+                    if(roulette.getEmail().equals(player.getEmail())) {
+                        status.setBackgroundColor(Color.parseColor("#CA2222"));
+                        job.setBackgroundColor(Color.parseColor("#CA2222"));
+                    } else {
+                        status.setBackgroundColor(Color.parseColor("#54BF8D"));
+                        job.setBackgroundColor(Color.parseColor("#54BF8D"));
+                    }
                     status.setText("La ruleta dice : " + roulette.getName());
                     if (roulette.getEmail().equals(player.getEmail())) {
                         String jsonUser = gson.toJson(player);
@@ -191,8 +199,8 @@ public class TBaseGameRoom extends AppCompatActivity {
 
         switch(stock.type) {
             case 1:
-                respA.setText("Ingresos " + stock.ra.get(0) + ", Impuestos: " + stock.ra.get(1));
-                respB.setText("Ingresos " + stock.rb.get(0) + ", Impuestos: " + stock.rb.get(1));
+                respA.setText("Ingresos " + stock.ra.get(0) + "\nImpuestos: " + stock.ra.get(1));
+                respB.setText("Ingresos " + stock.rb.get(0) + "\nImpuestos: " + stock.rb.get(1));
                 break;
             case 2:
                 respA.setText("Impuestos: " + stock.ra.get(0));
@@ -255,7 +263,6 @@ public class TBaseGameRoom extends AppCompatActivity {
                 @Override
                 public void run() {
                     if(clock == 1 && task.getVisibility() == View.VISIBLE) {
-                        // TODO: Check if this works
                         optionB.performClick();
                     }
                     visual_timer.setText(clock + " seg");
@@ -395,6 +402,56 @@ public class TBaseGameRoom extends AppCompatActivity {
                     }
                 }
             });
+        }
+    };
+
+    protected Emitter.Listener onTurnCard = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            String jsonUsers = (String) args[0];
+            final Map<String, List<Object>> users = gson.fromJson(jsonUsers, HashMap.class);
+            if (users.containsKey(player.getEmail())) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<Object> listToParse = users.get(player.getEmail());
+                        List<Card> me = new ArrayList<>();
+                        for(Object obj: listToParse) {
+                            JsonObject jsonCard = gson.toJsonTree(obj).getAsJsonObject();
+                            me.add(gson.fromJson(jsonCard, Card.class));
+                        }
+                        player.getCards().addAll(me);
+
+                        ArrayList<String> titles = new ArrayList<String>();
+                        ArrayList<String> descs = new ArrayList<String>();
+
+                        for (Card card : me) {
+                            titles.add(card.getName());
+                            descs.add(card.getDescription());
+                        }
+
+                        adapter.add(titles, descs);
+                        deckBox.setAdapter(adapter);
+                        deckBox.setOnItemClickListener(applyCard);
+                        Toast.makeText(
+                                appContext,
+                                String.format("Has obtenido %d cartas", me.size()),
+                                Toast.LENGTH_SHORT)
+                                .show();
+                    }
+                });
+            } else {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(
+                                appContext,
+                                "No tienes derecho a ingresos",
+                                Toast.LENGTH_SHORT)
+                                .show();
+                    }
+                });
+            }
         }
     };
 

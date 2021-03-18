@@ -25,7 +25,7 @@ public class GameRoomActivity extends TBaseGameRoom {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         setContentView(R.layout.game_room);
         this.roomId = getIntent().getStringExtra("roomId");
         String jsonToken = getIntent().getStringExtra("token");
@@ -100,7 +100,10 @@ public class GameRoomActivity extends TBaseGameRoom {
                     "user=" + json + "&room=" + roomId,
                     "");
 
-            this.mSocket = IO.socket(url);
+            IO.Options options = new IO.Options();
+            options.timeout = -1;
+            options.transports = new String[]{"websocket"};
+            this.mSocket = IO.socket(url, options);
             setSocketListeners();
             this.mSocket.connect();
             this.status.setText("Esperando a más jugadores");
